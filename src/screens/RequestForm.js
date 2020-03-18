@@ -16,12 +16,14 @@ import scale from '../config/scale';
 import {textStyles} from '../config/styles';
 import TextInput from '../components/TextInput';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import db from '../model/database'
 
 const initialState = {
   judulRequest: '',
   tipeRequest: 'Perizinan',
   alasan: '',
   isSubmitting: false,
+  isDrafting: false,
   isSuccess: false,
 };
 
@@ -118,6 +120,65 @@ export default class RequestForm extends Component {
     );
   };
 
+  submitToDraft = async () => {
+    const {
+      judulRequest, 
+      tipeRequest, 
+      alasan
+    } = this.state;
+
+    const data = {
+      judulRequest, 
+      tipeRequest, 
+      alasan
+    };
+
+    try{
+    const postsCollection = db.collections.get('request')
+    await  db.action(async () => {
+      const newPost = await postsCollection.create(post => {
+        post.judulRequest = data.judulRequest
+        post.tipeRequest = data.tipeRequest
+        post.alasan = data.alasan
+      })
+      if(newPost){
+        console.log('Success')
+        this.setState({
+          ...initialState,
+          isDrafting: false,
+          isSuccess: true,
+        });
+      }
+    })}
+    catch(e){
+      console.log(e)
+    }
+  }
+
+  onSubmitDraft = () => {
+    this.setState({isDrafting: true}, () => this.submitToDraft());
+  };
+
+  _renderSubmitDraft = () => {
+    const {isDrafting} = this.state;
+
+    return (
+      <TouchableOpacity
+        disabled={isDrafting}
+        style={styles.saveButton}
+        onPress={() => this.onSubmitDraft()}>
+        {isDrafting ? (
+          <ActivityIndicator
+            color={config.color.common.white}
+            size={config.fontSize.xlarge}
+          />
+        ) : (
+          <Text style={styles.saveButtonText}>Save To Draft</Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   render() {
     const {judulRequest, tipeRequest, alasan} = this.state;
     return (
@@ -160,6 +221,7 @@ export default class RequestForm extends Component {
           />
 
           {this._renderSubmitButton()}
+          {this._renderSubmitDraft()}
         </View>
       </>
     );
