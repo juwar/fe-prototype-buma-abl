@@ -59,7 +59,6 @@ export default class ListRequest extends Component {
     this.props.navigation.navigate(screenName.DETAIL_REQUEST_SCREEN, {
       detail,
     });
-    console.log(detail)
   };
 
   _renderList = item => {
