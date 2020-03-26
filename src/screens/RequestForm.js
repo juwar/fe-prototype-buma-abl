@@ -193,8 +193,6 @@ export default class RequestForm extends Component {
           firstPull = 1
         }
 
-        console.log(lastPulledAt)
-
         const listRequest = await fetch(`http://192.168.43.33:8898/ablSync?updatedAt=${lastPulledAt}&firstPull=${firstPull}`,)
           .then(response => {
             return response.json();

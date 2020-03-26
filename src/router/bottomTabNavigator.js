@@ -11,7 +11,7 @@ import config from '../config';
 import * as screenName from './screenNames';
 import RequestTab from '../screens/RequestForm';
 import ListDraft from '../screens/ListDraft';
-import {SubmittedReportStackNavigator} from './stackNavigator';
+import {SubmittedReportStackNavigator, SubmittedReportStackNavigatorDraft} from './stackNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -96,7 +96,7 @@ export default function BottomTabNavigator() {
       }}>
       <Tab.Screen name={screenName.REPORT_TAB} component={RequestTab} />
       <Tab.Screen name={screenName.LIST_REPORT} component={SubmittedReportStackNavigator} />
-      <Tab.Screen name={screenName.LIST_DRAFT} component={ListDraft} />
+      <Tab.Screen name={screenName.LIST_DRAFT} component={SubmittedReportStackNavigatorDraft} />
     </Tab.Navigator>
   );
 }

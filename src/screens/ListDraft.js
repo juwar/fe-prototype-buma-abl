@@ -57,7 +57,7 @@ export default class ListRequest extends Component {
       const postsCollection = db.collections.get('request');
       const allPosts = await postsCollection.query().fetch();
       const maping = allPosts.map(a => a._raw);
-      console.log(maping);
+      console.log('data',allPosts);
       this.setState({listRequest: allPosts, isFetching: false});
       return postsCollection;
     } catch (e) {
@@ -75,10 +75,18 @@ export default class ListRequest extends Component {
     this.refresh();
   }
 
-  goToDetail = detail => {
-    // this.props.navigation.navigate(screenName.DETAIL_REQUEST_SCREEN, {
-    //   detail,
-    // });
+  goToDetail = async detail => {
+    try{
+      console.log('FIND', await db.collections.get('request').query().fetch())
+      await db.action(async () => {
+        console.log('detail', detail)
+        await detail.update(post => {
+          post.judulRequest = 'Updated title'
+        })
+      })
+    }catch(e){
+      console.log(e)
+    }
   };
 
   _renderList = item => {
@@ -103,10 +111,13 @@ export default class ListRequest extends Component {
         </View>
       </TouchableOpacity>
     );
-
-    const enhance = withObservables(['request'], ({request}) => ({
-      request, // shortcut syntax for `comment: comment.observe()`
-    }));
+    
+    const enhance = withObservables(['request'], ({request}) => {
+      console.log('req ==> ', request)
+      return ({
+        request, // shortcut syntax for `comment: comment.observe()`
+      })
+    });
     const EnhancedRequest = enhance(Request);
 
     try {
@@ -130,7 +141,7 @@ export default class ListRequest extends Component {
           <FlatList
             data={listRequest}
             renderItem={({item}) => this._renderList(item)}
-            keyExtractor={item => item._id}
+            keyExtractor={item => item.id}
             onRefresh={() => this.refresh()}
             refreshing={isFetching}
           />

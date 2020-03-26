@@ -10,7 +10,7 @@ export const mySchema = appSchema({
         {name: 'judulRequest', type: 'string'},
         {name: 'tipeRequest', type: 'string'},
         {name: 'alasan', type: 'string'},
-        {name: 'updatedAt', type: 'number'},
+        {name: 'updatedAt', type: 'number'}
       ],
     }),
   ],
