@@ -6,11 +6,11 @@ export const mySchema = appSchema({
     tableSchema({
       name: 'request',
       columns: [
-        // {name: '_id', type: 'string'},
-        // {name: 'createdAt', type: 'string'},
+        {name: 'createdAt', type: 'number'},
         {name: 'judulRequest', type: 'string'},
         {name: 'tipeRequest', type: 'string'},
         {name: 'alasan', type: 'string'},
+        {name: 'updatedAt', type: 'number'},
       ],
     }),
   ],

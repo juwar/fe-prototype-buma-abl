@@ -10,6 +10,7 @@ import config from '../config';
 
 import * as screenName from './screenNames';
 import RequestTab from '../screens/RequestForm';
+import ListDraft from '../screens/ListDraft';
 import {SubmittedReportStackNavigator} from './stackNavigator';
 
 const Tab = createBottomTabNavigator();
@@ -29,6 +30,9 @@ export default function BottomTabNavigator() {
                 iconName = 'file-document-edit-outline';
                 break;
               case screenName.LIST_REPORT:
+                iconName = 'format-list-bulleted-type';
+                break;
+              case screenName.LIST_DRAFT:
                 iconName = 'format-list-bulleted-type';
                 break;
               default:
@@ -60,6 +64,9 @@ export default function BottomTabNavigator() {
               case screenName.LIST_REPORT:
                 tabName = 'My Submitted Request';
                 break;
+              case screenName.LIST_REPORT:
+                tabName = 'TEST';
+                break;
               default:
                 tabName = '';
                 break;
@@ -89,6 +96,7 @@ export default function BottomTabNavigator() {
       }}>
       <Tab.Screen name={screenName.REPORT_TAB} component={RequestTab} />
       <Tab.Screen name={screenName.LIST_REPORT} component={SubmittedReportStackNavigator} />
+      <Tab.Screen name={screenName.LIST_DRAFT} component={ListDraft} />
     </Tab.Navigator>
   );
 }

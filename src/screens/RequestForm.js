@@ -11,17 +11,22 @@ import {
 } from 'react-native';
 
 import config from '../config';
-import endpoint from '../config/endpoint'
+import endpoint from '../config/endpoint';
 import scale from '../config/scale';
 import {textStyles} from '../config/styles';
 import TextInput from '../components/TextInput';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import db from '../model/database'
+import db from '../model/database';
+import database from '../model/database';
+import {synchronize} from '@nozbe/watermelondb/sync';
+import { date } from '@nozbe/watermelondb/decorators';
 
 const initialState = {
   judulRequest: '',
   tipeRequest: 'Perizinan',
   alasan: '',
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
   isSubmitting: false,
   isDrafting: false,
   isSuccess: false,
@@ -42,16 +47,12 @@ export default class RequestForm extends Component {
   };
 
   submittingData = async () => {
-    const {
-      judulRequest, 
-      tipeRequest, 
-      alasan
-    } = this.state;
+    const {judulRequest, tipeRequest, alasan} = this.state;
 
     const data = {
-      judulRequest, 
-      tipeRequest, 
-      alasan
+      judulRequest,
+      tipeRequest,
+      alasan,
     };
 
     const headers = {
@@ -120,40 +121,42 @@ export default class RequestForm extends Component {
     );
   };
 
+  //SUBMIT DRAFT
   submitToDraft = async () => {
-    const {
-      judulRequest, 
-      tipeRequest, 
-      alasan
-    } = this.state;
+    const {judulRequest, tipeRequest, alasan, createdAt, updatedAt} = this.state;
 
     const data = {
-      judulRequest, 
-      tipeRequest, 
-      alasan
+      judulRequest,
+      tipeRequest,
+      alasan,
+      createdAt,
+      updatedAt,
     };
 
-    try{
-    const postsCollection = db.collections.get('request')
-    await  db.action(async () => {
-      const newPost = await postsCollection.create(post => {
-        post.judulRequest = data.judulRequest
-        post.tipeRequest = data.tipeRequest
-        post.alasan = data.alasan
-      })
-      if(newPost){
-        console.log('Success')
-        this.setState({
-          ...initialState,
-          isDrafting: false,
-          isSuccess: true,
+    try {
+      const postsCollection = db.collections.get('request');
+      console.log(data)
+      await db.action(async () => {
+        const newPost = await postsCollection.create(post => {
+          post.judulRequest = data.judulRequest;
+          post.tipeRequest = data.tipeRequest;
+          post.alasan = data.alasan;
+          post.createdAt = Date.now();
+          post.updatedAt = Date.now();
         });
-      }
-    })}
-    catch(e){
-      console.log(e)
+        if (newPost) {
+          console.log('Success');
+          this.setState({
+            ...initialState,
+            isDrafting: false,
+            isSuccess: true,
+          });
+        }
+      });
+    } catch (e) {
+      console.log(e);
     }
-  }
+  };
 
   onSubmitDraft = () => {
     this.setState({isDrafting: true}, () => this.submitToDraft());
@@ -179,6 +182,95 @@ export default class RequestForm extends Component {
     );
   };
 
+  //SYNC
+  onSync = async () => {
+    await synchronize({
+      database,
+      pullChanges: async ({lastPulledAt}) => {
+        let firstPull = 0
+        if(!lastPulledAt){
+          lastPulledAt = 1577883661
+          firstPull = 1
+        }
+
+        console.log(lastPulledAt)
+
+        const listRequest = await fetch(`http://192.168.43.33:8898/ablSync?updatedAt=${lastPulledAt}&firstPull=${firstPull}`,)
+          .then(response => {
+            return response.json();
+          })
+          .then(data => {
+            if (data.status === 200) {
+              return data.data;
+            } else {
+              return [];
+            }
+          })
+          .catch(e => {
+            console.warn(e);
+            return [];
+          });
+          const {changes, timestamp} = listRequest;
+        return {changes, timestamp};
+      },
+
+      pushChanges: async ({changes, lastPulledAt}) => {
+
+        const headers = {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        };
+        const response = await fetch(`http://192.168.43.33:8898/ablSync?updatedAt=${lastPulledAt}`,
+          {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(changes),
+            timeout: 500,
+          },
+        );
+        console.log(changes, 'ini changes')
+        // console.log(response, 'ini changes')
+        if (!response.ok) {
+          console.log('errrorrrrr')
+          throw new Error(await response.text());
+        }
+      },
+    });
+  };
+
+  _renderSync = () => {
+    const {isDrafting} = this.state;
+
+    return (
+      <TouchableOpacity
+        disabled={isDrafting}
+        style={styles.saveButton}
+        onPress={() => this.onSync()}>
+        <Text style={styles.saveButtonText}>SYNC</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  //Reset
+  onReset = async () => {
+    await db.action(async () => {
+        await db.unsafeResetDatabase()
+      })
+  };
+
+  _renderReset = () => {
+    const {isDrafting} = this.state;
+
+    return (
+      <TouchableOpacity
+        disabled={isDrafting}
+        style={styles.saveButton}
+        onPress={() => this.onReset()}>
+        <Text style={styles.saveButtonText}>Reset DB</Text>
+      </TouchableOpacity>
+    );
+  };
+
   render() {
     const {judulRequest, tipeRequest, alasan} = this.state;
     return (
@@ -189,7 +281,7 @@ export default class RequestForm extends Component {
         />
         <View style={styles.mainContainer}>
           <View style={styles.centeredContent}>
-          <Icon name="rocket" size={50} color={config.color.common.darkRed} />
+            <Icon name="rocket" size={50} color={config.color.common.darkRed} />
             <Text style={styles.text}>Request Form</Text>
           </View>
 
@@ -220,8 +312,10 @@ export default class RequestForm extends Component {
             value={alasan}
           />
 
-          {this._renderSubmitButton()}
+          {/* {this._renderSubmitButton()} */}
           {this._renderSubmitDraft()}
+          {this._renderSync()}
+          {this._renderReset()}
         </View>
       </>
     );

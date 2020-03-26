@@ -1,7 +1,7 @@
 import { Model } from '@nozbe/watermelondb'
 import { field } from '@nozbe/watermelondb/decorators'
 
-export default class Post extends Model {
+export default class Request extends Model {
     static table = 'request'
 
     // @field('_id')
@@ -18,4 +18,10 @@ export default class Post extends Model {
 
     @field('alasan')
     alasan
+
+    @field('createdAt')
+    createdAt
+
+    @field('updatedAt')
+    updatedAt
 }
